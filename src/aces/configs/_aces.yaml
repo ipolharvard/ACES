@@ -13,6 +13,8 @@ predicates_path: null
 # Path to store the output file. The `${data._prefix}` addition allows us to add shard specific prefixes in a
 # sharded data mode.
 output_filepath: ${cohort_dir}/${cohort_name}${data._prefix}.parquet
+# Optional path to store the full extraction result before MEDS label export.
+audit_filepath: null
 # Optional path to store the output file with the raw window data.
 window_stats_dir: null
 window_stats_filepath: ${window_stats_dir}/${cohort_name}${data._prefix}.parquet
@@ -67,6 +69,7 @@ hydra:
       config_path (optional): path to the task configuration file, defaults to '<cohort_dir>/<cohort_name>.yaml'
       predicates_path (optional): path to a separate predicates-only configuration file for overriding
       output_filepath (optional): path to the output file, defaults to '<cohort_dir>/<cohort_name>.parquet'
+      audit_filepath (optional): path to the full extraction result, including audit columns
 
       ---------------- Default Config ----------------
       $CONFIG

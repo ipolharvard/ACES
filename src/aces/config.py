@@ -28,6 +28,8 @@ from .utils import parse_timedelta
 if TYPE_CHECKING:
     from collections import OrderedDict
 
+    from .relational import RelationalTaskConfig
+
 logger = logging.getLogger(__name__)
 
 
@@ -39,7 +41,7 @@ class PlainPredicateConfig:
     value_min_inclusive: bool | None = None
     value_max_inclusive: bool | None = None
     static: bool = False
-    other_cols: dict[str, str] = field(default_factory=dict)
+    other_cols: dict[str, Any] = field(default_factory=dict)
 
     def MEDS_eval_expr(self) -> pl.Expr:
         """Returns a Polars expression that evaluates this predicate for a MEDS formatted dataset.
@@ -140,7 +142,9 @@ class PlainPredicateConfig:
                 criteria.append(pl.col("numeric_value") < self.value_max)
 
         if self.other_cols:
-            criteria.extend([pl.col(col) == value for col, value in self.other_cols.items()])
+            from .relational import column_condition
+
+            criteria.extend([column_condition(col, value) for col, value in self.other_cols.items()])
 
         if len(criteria) == 1:
             return criteria[0]
@@ -226,7 +230,9 @@ class PlainPredicateConfig:
                 criteria.append(pl.col(values_column) < self.value_max)
 
         if self.other_cols:
-            criteria.extend([pl.col(col) == value for col, value in self.other_cols.items()])
+            from .relational import column_condition
+
+            criteria.extend([column_condition(col, value) for col, value in self.other_cols.items()])
 
         if len(criteria) == 1:
             return criteria[0]
@@ -1102,7 +1108,7 @@ class TaskExtractorConfig:
         cls: TaskExtractorConfig,
         config_path: str | Path,
         predicates_path: str | Path | None = None,
-    ) -> TaskExtractorConfig:
+    ) -> TaskExtractorConfig | RelationalTaskConfig:
         """Load a configuration file from the given path and return it as a dict.
 
         Args:
@@ -1293,6 +1299,11 @@ class TaskExtractorConfig:
                 f"Only supports reading from '.yaml'. Got: '{config_path.suffix}' in '{config_path.name}'."
             )
 
+        if isinstance(loaded_dict, dict) and loaded_dict.get("engine") == "relational":
+            from .relational import RelationalTaskConfig
+
+            return RelationalTaskConfig.from_dict(loaded_dict, predicates_path)
+
         overriding_predicates = {}
         overriding_demographics = {}
         if predicates_path:
@@ -1405,8 +1416,15 @@ class TaskExtractorConfig:
                         f"Currently defined as the string: {p}. "
                         "Please refer to the documentation for the supported formats."
                     )
-                config_data = {k: v for k, v in p.items() if k in PlainPredicateConfig.__dataclass_fields__}
-                other_cols = {k: v for k, v in p.items() if k not in config_data}
+                config_data = {
+                    k: v
+                    for k, v in p.items()
+                    if k in PlainPredicateConfig.__dataclass_fields__ and k != "other_cols"
+                }
+                other_cols = {
+                    **p.get("other_cols", {}),
+                    **{k: v for k, v in p.items() if k not in config_data and k != "other_cols"},
+                }
                 predicate_objs[n] = PlainPredicateConfig(**config_data, other_cols=other_cols)
 
         if final_demographics:

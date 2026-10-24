@@ -134,16 +134,27 @@ def main(cfg: DictConfig) -> None:  # pragma: no cover
     )
 
     logger.info(f"Attempting to get predicates dataframe given:\n{OmegaConf.to_yaml(cfg.data)}")
-    predicates_df = predicates.get_predicates_df(task_cfg, cfg.data)
+    from .relational import RelationalTaskConfig, extract
 
-    # query results
-    result = query.query(task_cfg, predicates_df)
+    if isinstance(task_cfg, RelationalTaskConfig):
+        if cfg.data.standard.lower() != "meds":
+            raise ValueError("Relational event queries currently require MEDS input")
+        result = extract(task_cfg, pl.scan_parquet(cfg.data.path))
+    else:
+        predicates_df = predicates.get_predicates_df(task_cfg, cfg.data)
+        result = query.query(task_cfg, predicates_df)
+    if cfg.get("audit_filepath"):
+        Path(cfg.audit_filepath).parent.mkdir(parents=True, exist_ok=True)
+        result.write_parquet(cfg.audit_filepath)
     result_is_empty = len(result) == 0
 
     # save results to parquet
     os.makedirs(os.path.dirname(cfg.output_filepath), exist_ok=True)
 
     if cfg.data.standard.lower() == "meds":
+        if isinstance(task_cfg, RelationalTaskConfig):
+            # Audit fields may use MEDS export names, so project before renaming.
+            result = result.select("subject_id", "index_timestamp", "label")
         for in_col, out_col in [
             ("subject_id", LabelSchema.subject_id_name),
             ("index_timestamp", LabelSchema.prediction_time_name),
