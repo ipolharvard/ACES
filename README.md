@@ -37,6 +37,10 @@ Currently, two data standards are directly supported: the [Medical Event Data St
 
 This README provides a brief overview of this tool, instructions for use, and a description of the fields in the task configuration file (see representative configs in `sample_configs/`). Please refer to the [ACES Documentation](https://eventstreamaces.readthedocs.io/en/latest/) for more detailed information.
 
+The fork also supports [identity-preserving relational MEDS queries](docs/source/relational.md)
+for encounter matching, nullable fields, and explicit follow-up criteria. Existing window
+configurations continue to use the original engine.
+
 ## Installation
 
 ### For MEDS v0.4.0
