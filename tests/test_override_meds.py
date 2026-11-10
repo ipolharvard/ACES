@@ -5,8 +5,6 @@ import polars as pl
 from .test_meds import parse_labels_yaml, parse_shards_yaml
 from .utils import cli_test
 
-pl.enable_string_cache()
-
 # Data (input)
 MEDS_SHARDS = parse_shards_yaml(
     """

@@ -49,20 +49,15 @@ def direct_load_plain_predicates(
         >>> with tempfile.NamedTemporaryFile(mode="w", suffix=".parquet") as f:
         ...     data_path = Path(f.name)
         ...     CSV_data.write_parquet(data_path)
-        ...     direct_load_plain_predicates(data_path, ["is_admission", "is_discharge", "is_male",
+        ...     result = direct_load_plain_predicates(data_path, ["is_admission", "is_discharge", "is_male",
         ...          "is_female", "brown_eyes"], "%m/%d/%Y %H:%M")
-        shape: (5, 7)
-        ┌────────────┬─────────────────────┬──────────────┬──────────────┬─────────┬───────────┬────────────┐
-        │ subject_id ┆ timestamp           ┆ is_admission ┆ is_discharge ┆ is_male ┆ is_female ┆ brown_eyes │
-        │ ---        ┆ ---                 ┆ ---          ┆ ---          ┆ ---     ┆ ---       ┆ ---        │
-        │ i64        ┆ datetime[μs]        ┆ i64          ┆ i64          ┆ i64     ┆ i64       ┆ i64        │
-        ╞════════════╪═════════════════════╪══════════════╪══════════════╪═════════╪═══════════╪════════════╡
-        │ 1          ┆ null                ┆ 0            ┆ 0            ┆ 1       ┆ 0         ┆ 1          │
-        │ 1          ┆ 2021-01-01 00:00:00 ┆ 1            ┆ 0            ┆ 0       ┆ 0         ┆ 0          │
-        │ 1          ┆ 2021-01-01 12:00:00 ┆ 0            ┆ 1            ┆ 0       ┆ 0         ┆ 0          │
-        │ 2          ┆ 2021-01-02 00:00:00 ┆ 1            ┆ 0            ┆ 0       ┆ 0         ┆ 0          │
-        │ 2          ┆ null                ┆ 0            ┆ 0            ┆ 0       ┆ 1         ┆ 0          │
-        └────────────┴─────────────────────┴──────────────┴──────────────┴─────────┴───────────┴────────────┘
+        >>> for row in result.iter_rows():
+        ...     print(row)
+        (1, None, 0, 0, 1, 0, 1)
+        (1, datetime.datetime(2021, 1, 1, 0, 0), 1, 0, 0, 0, 0)
+        (1, datetime.datetime(2021, 1, 1, 12, 0), 0, 1, 0, 0, 0)
+        (2, datetime.datetime(2021, 1, 2, 0, 0), 1, 0, 0, 0, 0)
+        (2, None, 0, 0, 0, 1, 0)
 
     If the timestamp column is already a timestamp, then the `ts_format` argument id not needed, but can be
     used without an error.
@@ -73,20 +68,15 @@ def direct_load_plain_predicates(
         ...         .with_columns(pl.col("timestamp").str.strptime(pl.Datetime, format="%m/%d/%Y %H:%M"))
         ...         .write_parquet(data_path)
         ...     )
-        ...     direct_load_plain_predicates(data_path, ["is_admission", "is_discharge", "is_male",
+        ...     result = direct_load_plain_predicates(data_path, ["is_admission", "is_discharge", "is_male",
         ...          "is_female", "brown_eyes"], "%m/%d/%Y %H:%M")
-        shape: (5, 7)
-        ┌────────────┬─────────────────────┬──────────────┬──────────────┬─────────┬───────────┬────────────┐
-        │ subject_id ┆ timestamp           ┆ is_admission ┆ is_discharge ┆ is_male ┆ is_female ┆ brown_eyes │
-        │ ---        ┆ ---                 ┆ ---          ┆ ---          ┆ ---     ┆ ---       ┆ ---        │
-        │ i64        ┆ datetime[μs]        ┆ i64          ┆ i64          ┆ i64     ┆ i64       ┆ i64        │
-        ╞════════════╪═════════════════════╪══════════════╪══════════════╪═════════╪═══════════╪════════════╡
-        │ 1          ┆ null                ┆ 0            ┆ 0            ┆ 1       ┆ 0         ┆ 1          │
-        │ 1          ┆ 2021-01-01 00:00:00 ┆ 1            ┆ 0            ┆ 0       ┆ 0         ┆ 0          │
-        │ 1          ┆ 2021-01-01 12:00:00 ┆ 0            ┆ 1            ┆ 0       ┆ 0         ┆ 0          │
-        │ 2          ┆ 2021-01-02 00:00:00 ┆ 1            ┆ 0            ┆ 0       ┆ 0         ┆ 0          │
-        │ 2          ┆ null                ┆ 0            ┆ 0            ┆ 0       ┆ 1         ┆ 0          │
-        └────────────┴─────────────────────┴──────────────┴──────────────┴─────────┴───────────┴────────────┘
+        >>> for row in result.iter_rows():
+        ...     print(row)
+        (1, None, 0, 0, 1, 0, 1)
+        (1, datetime.datetime(2021, 1, 1, 0, 0), 1, 0, 0, 0, 0)
+        (1, datetime.datetime(2021, 1, 1, 12, 0), 0, 1, 0, 0, 0)
+        (2, datetime.datetime(2021, 1, 2, 0, 0), 1, 0, 0, 0, 0)
+        (2, None, 0, 0, 0, 1, 0)
         >>> with tempfile.NamedTemporaryFile(mode="w", suffix=".parquet") as f:
         ...     data_path = Path(f.name)
         ...     (
@@ -94,37 +84,27 @@ def direct_load_plain_predicates(
         ...         .with_columns(pl.col("timestamp").str.strptime(pl.Datetime, format="%m/%d/%Y %H:%M"))
         ...         .write_parquet(data_path)
         ...     )
-        ...     direct_load_plain_predicates(data_path, ["is_admission", "is_discharge", "is_male",
+        ...     result = direct_load_plain_predicates(data_path, ["is_admission", "is_discharge", "is_male",
         ...          "is_female", "brown_eyes"], None)
-        shape: (5, 7)
-        ┌────────────┬─────────────────────┬──────────────┬──────────────┬─────────┬───────────┬────────────┐
-        │ subject_id ┆ timestamp           ┆ is_admission ┆ is_discharge ┆ is_male ┆ is_female ┆ brown_eyes │
-        │ ---        ┆ ---                 ┆ ---          ┆ ---          ┆ ---     ┆ ---       ┆ ---        │
-        │ i64        ┆ datetime[μs]        ┆ i64          ┆ i64          ┆ i64     ┆ i64       ┆ i64        │
-        ╞════════════╪═════════════════════╪══════════════╪══════════════╪═════════╪═══════════╪════════════╡
-        │ 1          ┆ null                ┆ 0            ┆ 0            ┆ 1       ┆ 0         ┆ 1          │
-        │ 1          ┆ 2021-01-01 00:00:00 ┆ 1            ┆ 0            ┆ 0       ┆ 0         ┆ 0          │
-        │ 1          ┆ 2021-01-01 12:00:00 ┆ 0            ┆ 1            ┆ 0       ┆ 0         ┆ 0          │
-        │ 2          ┆ 2021-01-02 00:00:00 ┆ 1            ┆ 0            ┆ 0       ┆ 0         ┆ 0          │
-        │ 2          ┆ null                ┆ 0            ┆ 0            ┆ 0       ┆ 1         ┆ 0          │
-        └────────────┴─────────────────────┴──────────────┴──────────────┴─────────┴───────────┴────────────┘
+        >>> for row in result.iter_rows():
+        ...     print(row)
+        (1, None, 0, 0, 1, 0, 1)
+        (1, datetime.datetime(2021, 1, 1, 0, 0), 1, 0, 0, 0, 0)
+        (1, datetime.datetime(2021, 1, 1, 12, 0), 0, 1, 0, 0, 0)
+        (2, datetime.datetime(2021, 1, 2, 0, 0), 1, 0, 0, 0, 0)
+        (2, None, 0, 0, 0, 1, 0)
         >>> with tempfile.NamedTemporaryFile(mode="w", suffix=".csv") as f:
         ...     data_path = Path(f.name)
         ...     CSV_data.write_csv(data_path)
-        ...     direct_load_plain_predicates(data_path, ["is_admission", "is_discharge", "is_male",
+        ...     result = direct_load_plain_predicates(data_path, ["is_admission", "is_discharge", "is_male",
         ...          "is_female", "brown_eyes"], "%m/%d/%Y %H:%M")
-        shape: (5, 7)
-        ┌────────────┬─────────────────────┬──────────────┬──────────────┬─────────┬───────────┬────────────┐
-        │ subject_id ┆ timestamp           ┆ is_admission ┆ is_discharge ┆ is_male ┆ is_female ┆ brown_eyes │
-        │ ---        ┆ ---                 ┆ ---          ┆ ---          ┆ ---     ┆ ---       ┆ ---        │
-        │ i64        ┆ datetime[μs]        ┆ i64          ┆ i64          ┆ i64     ┆ i64       ┆ i64        │
-        ╞════════════╪═════════════════════╪══════════════╪══════════════╪═════════╪═══════════╪════════════╡
-        │ 1          ┆ null                ┆ 0            ┆ 0            ┆ 1       ┆ 0         ┆ 1          │
-        │ 1          ┆ 2021-01-01 00:00:00 ┆ 1            ┆ 0            ┆ 0       ┆ 0         ┆ 0          │
-        │ 1          ┆ 2021-01-01 12:00:00 ┆ 0            ┆ 1            ┆ 0       ┆ 0         ┆ 0          │
-        │ 2          ┆ 2021-01-02 00:00:00 ┆ 1            ┆ 0            ┆ 0       ┆ 0         ┆ 0          │
-        │ 2          ┆ null                ┆ 0            ┆ 0            ┆ 0       ┆ 1         ┆ 0          │
-        └────────────┴─────────────────────┴──────────────┴──────────────┴─────────┴───────────┴────────────┘
+        >>> for row in result.iter_rows():
+        ...     print(row)
+        (1, None, 0, 0, 1, 0, 1)
+        (1, datetime.datetime(2021, 1, 1, 0, 0), 1, 0, 0, 0, 0)
+        (1, datetime.datetime(2021, 1, 1, 12, 0), 0, 1, 0, 0, 0)
+        (2, datetime.datetime(2021, 1, 2, 0, 0), 1, 0, 0, 0, 0)
+        (2, None, 0, 0, 0, 1, 0)
         >>> with tempfile.NamedTemporaryFile(mode="w", suffix=".csv") as f:
         ...     data_path = Path(f.name)
         ...     CSV_data.write_csv(data_path)

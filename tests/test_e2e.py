@@ -6,8 +6,6 @@ import polars as pl
 
 from .utils import cli_test
 
-pl.enable_string_cache()
-
 TS_FORMAT = "%m/%d/%Y %H:%M"
 PRED_CNT_TYPE = pl.Int64
 EVENT_INDEX_TYPE = pl.UInt64

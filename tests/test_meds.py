@@ -24,7 +24,6 @@ except ImportError:
     from yaml import Loader
 
 logger = logging.getLogger(__name__)
-pl.enable_string_cache()
 
 TS_FORMAT = "%m/%d/%Y %H:%M"
 PRED_CNT_TYPE = pl.Int64

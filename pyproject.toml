@@ -24,7 +24,7 @@ dependencies = [
     # polars 1.30's expression repr, so when a newer polars changes that repr the
     # doctests will need updating — tracked in
     # https://github.com/justin13601/ACES/issues/201.
-    "polars >= 1.30, < 2",
+    "polars >= 1.30, < 3",
     "meds >= 0.4, < 0.6",
     # Numeric / arrow: loose floors only. numpy 1.26 is the oldest version that ships
     # wheels for py 3.12+ (earlier versions need distutils at build time).
